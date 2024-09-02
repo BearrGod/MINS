@@ -207,7 +207,8 @@ bool UpdaterLidar::update(std::shared_ptr<LiDARData> lidar, shared_ptr<iKDDATA> 
       cout << "ikd->time + dt > state->oldest_clone_time()" << endl;
       return false;
     } else
-      std::exit(EXIT_FAILURE);
+      // std::exit(EXIT_FAILURE);
+      return false ;
   }
 
   // Add to state map
