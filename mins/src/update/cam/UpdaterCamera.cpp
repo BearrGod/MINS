@@ -40,6 +40,7 @@
 #include "update/UpdaterStatistics.h"
 #include "utils/Print_Logger.h"
 #include "utils/TimeChecker.h"
+#include  "update/UpdaterZeroVelocity.h"
 
 using namespace std;
 using namespace Eigen;
@@ -91,6 +92,15 @@ UpdaterCamera::UpdaterCamera(shared_ptr<State> state) : state(state) {
 
   // init timing logger
   tc = std::make_shared<TimeChecker>();
+}
+
+map<int ,DB_ptr> UpdaterCamera::get_feature_database() { 
+  map<int ,DB_ptr> r ; 
+  for(const auto& [i,db] : trackFEATS)
+  {
+    r[i] = db->get_feature_database() ; 
+  }
+  return r ;     
 }
 
 void UpdaterCamera::feed_measurement(const ov_core::CameraData &camdata) {

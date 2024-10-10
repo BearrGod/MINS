@@ -1,0 +1,67 @@
+%YAML:1.0 # need to specify the file type at the top!
+
+cam:
+  enabled: true
+  max_n: 2
+  use_stereo: false
+  stereo_pair: [0, 1]
+  do_calib_ext: true
+  do_calib_int: false
+  do_calib_dt: true
+  n_pts: 200
+  fast: 25
+  grid_x: 5
+  grid_y: 5
+  min_px_dist: 15
+  knn: 0.70
+  downsample: true
+  histogram_method: "HISTOGRAM" # NONE, HISTOGRAM, CLAHE
+  max_slam: 80
+  max_msckf: 25 
+  feat_rep: "GLOBAL_FULL_INVERSE_DEPTH"
+  init_cov_dt: 1e-4
+  init_cov_ex_o: 1e-4
+  init_cov_ex_p: 1e-4
+  init_cov_in_k: 1e-2
+  init_cov_in_c: 1e-1
+  init_cov_in_r: 1e-6
+  sigma_px: 1
+  chi2_mult: 1
+  use_klt: true # if true we will use KLT, otherwise use a ORB descriptor + robust matching
+
+
+  # feature related
+  fi_min_dist: 0.25
+  fi_max_dist: 400
+  fi_max_baseline: 2000
+  fi_max_cond_number: 10000
+
+  # ==================================================================
+  # ==================================================================
+
+cam0:
+  timeoffset: -0.0006673189311901853
+  T_cam_imu: #rotation from camera to IMU R_CtoI, position of camera in IMU p_CinI
+    - [0.10451250568491366, 0.24829813709281015, -0.9630291642892762, 0.014927634382782398]
+    - [0.06820195543367943, 0.9642631050676794, 0.2560178850788762, 0.0456516544694154]
+    - [0.9921822561558357, -0.09243754281393633, 0.08384313476986882, -0.0697261860769894]
+    - [0.0, 0.0, 0.0, 1.0]
+  distortion_coeffs: [-0.005708638297078409, 0.020090193400916504, -0.012231213377276786, 0.0017975244480355858]
+  distortion_model: equidistant
+  intrinsics: [561.2202111626574, 561.4599287600455, 639.5230006604587, 416.3062918322655]
+  resolution: [1280, 800]
+  topic: "/ffc_rover_inertial_node/camB"
+
+cam1:
+  timeoffset: -0.0007718543408472442
+  T_cam_imu: #rotation from camera to IMU R_CtoI, position of camera in IMU p_CinI
+    - [0.018086731602051598, -0.013118457532819261, 0.9997503569451295, -0.00014972626829364274]
+    - [-0.3392011588387587, 0.9405323693699941, 0.018477987166007626, 0.027968037492942917]
+    - [-0.9405399746860298, -0.3394506860196685, 0.01256136053052731, -0.0938301564773596]
+    - [0.0, 0.0, 0.0, 1.0]
+  distortion_coeffs: [-0.0015787399578141203, -0.0015262681807634057, 0.005694537511278028, -0.0027996161905917347]
+  distortion_model: equidistant
+  intrinsics: [569.6147413472829, 569.341729192912, 631.2659487608084, 398.51266057609143]
+  resolution: [1280, 800]
+  topic: "/ffc_rover_inertial_node/camD"
+

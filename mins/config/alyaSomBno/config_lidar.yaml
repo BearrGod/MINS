@@ -1,0 +1,47 @@
+%YAML:1.0 # need to specify the file type at the top!
+
+lidar:
+  enabled: false
+  max_n: 1
+  do_calib_dt: true
+  do_calib_ext: true
+  init_cov_dt: 1e-4
+  init_cov_ex_o: 1e-6
+  init_cov_ex_p: 1e-6
+  max_range: 6.0
+  min_range: 0.5
+  chi2_mult: 1
+  raw_do_downsample: true
+  raw_downsample_size: 0.1
+  raw_noise: 0.01
+  raw_remove_motion_blur: false # required to set v_angles and h_angles correctly
+  raw_point_dt: 1e-6
+  map_do_downsample: true
+  map_downsample_size: 0.1
+  map_noise: 0.01
+  map_ngbr_num: 8
+  map_ngbr_max_d: 1.0
+  map_decay_time: 3600 # sec
+  map_decay_dist: 1000 # m
+  map_use_icp: true
+  map_icp_dist: 30 # m
+  plane_max_p2pd: 0.05
+  plane_max_condi: 200.0
+
+lidar0:
+  timeoffset: 0.008
+  T_imu_lidar:
+    - [0.023232, -0.999606,  0.015747,  0.032691]
+    - [-0.272130, -0.021479, -0.962021, -0.100165]
+    - [ 0.961980,  0.018065, -0.272521,  0.005090]
+    - [0.0, 0.0, 0.0, 1.0]
+  topic: "/livox/lidar"
+
+lidar1:
+  timeoffset: -0.0
+  T_imu_lidar:
+    - [-0.516377, -0.702254, -0.490096,-0.334623]
+    - [0.491997, -0.711704, 0.501414,0.431973]
+    - [-0.700923, 0.0177927, 0.713015,1.94043]
+    - [0.0, 0.0, 0.0, 1.0]
+  topic: "/ns2/velodyne_points"

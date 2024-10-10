@@ -33,6 +33,7 @@
 #include "OptionsLidar.h"
 #include "OptionsVicon.h"
 #include "OptionsWheel.h"
+#include "OptionZUPT.h"
 #include "utils/Print_Logger.h"
 #include "utils/opencv_yaml_parse.h"
 
@@ -94,6 +95,7 @@ void mins::OptionsEstimator::load(const std::shared_ptr<ov_core::YamlParser> &pa
   vicon = make_shared<OptionsVicon>();
   cam = make_shared<OptionsCamera>();
   imu = make_shared<OptionsIMU>();
+  zupt = make_shared<OptionsZeroVelocityUpdate>() ; 
   init->load(parser);
   imu->load(parser);
   cam->load(parser);
@@ -101,6 +103,8 @@ void mins::OptionsEstimator::load(const std::shared_ptr<ov_core::YamlParser> &pa
   wheel->load(parser);
   lidar->load(parser);
   vicon->load(parser);
+  zupt->load(parser) ; 
+  zupt->print() ; 
 }
 
 void mins::OptionsEstimator::print() {
@@ -124,6 +128,7 @@ void mins::OptionsEstimator::print() {
   wheel->print();
   lidar->print();
   init->print();
+  zupt->print() ; 
 }
 
 void mins::OptionsEstimator::load_print(const std::shared_ptr<ov_core::YamlParser> &parser) {

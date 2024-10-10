@@ -1,0 +1,8 @@
+%YAML:1.0 # need to specify the file type at the top!
+
+imu:
+  accel_noise: 0.01  # [ m / s^2 / sqrt(Hz) ]   ( accel "white noise" )
+  accel_bias: 0.005  # [ m / s^3 / sqrt(Hz) ].  ( accel bias diffusion )
+  gyro_noise: 0.0005     # [ rad / s / sqrt(Hz) ]   ( gyro "white noise" )
+  gyro_bias: 5.00e-06        # [ rad / s^2 / sqrt(Hz) ] ( gyro bias diffusion )
+  topic: "/ffc_rover_inertial_node/imu"

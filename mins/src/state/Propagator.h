@@ -97,6 +97,15 @@ public:
   /// reset CPI class and clone info at given time
   void reset_cpi(double clone_t);
 
+  
+  
+  
+  /**
+   * @brief This will remove any IMU measurements that are older then the given measurement time
+   * @param oldest_time Time that we can discard measurements before (in IMU clock)
+   */
+  void clean_old_imu_measurements(double oldest_time) ; 
+
   /// message time history
   deque<double> t_hist;
 

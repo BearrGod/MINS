@@ -88,7 +88,13 @@ void UpdaterLidar::feed_measurement(std::shared_ptr<pcl::PointCloud<pcl::PointXY
     state->op->lidar->raw_do_downsample ? LidarHelper::downsample((*it), state->op->lidar->raw_downsample_size) : void();
 
     // Initialize ikd map if not initialized OR scan registration failed more than 1 second
-    if (!ikd_data.at((*it)->id)->tree->initialized() || ikd_data.at((*it)->id)->last_up_time + 1 < (*it)->time) {
+    if (!ikd_data.at((*it)->id)->tree->initialized() /*|| ikd_data.at((*it)->id)->last_up_time + 10 < (*it)->time*/) {
+      if(ikd_data.at((*it)->id)->last_up_time + 10  < (*it)->time)
+      {
+        PRINT4(BOLDREDPURPLE);
+        PRINT4("[LiDAR]feed_measurement : Map registration failed more than 10 second regulate CPU usage!\n");
+        PRINT4(RESET);
+      }
       LidarHelper::init_map_local((*it), ikd_data.at((*it)->id), state->op->lidar);
       it = stack_lidar_raw.erase(it);
       continue;

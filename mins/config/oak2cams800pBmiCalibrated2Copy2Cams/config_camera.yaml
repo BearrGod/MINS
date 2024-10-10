@@ -1,0 +1,65 @@
+%YAML:1.0 # need to specify the file type at the top!
+
+cam:
+  enabled: true
+  max_n: 2
+  use_stereo: false
+  stereo_pair: [0, 1]
+  do_calib_ext: true
+  do_calib_int: true
+  do_calib_dt: true
+  n_pts: 200
+  fast: 25
+  grid_x: 5
+  grid_y: 5
+  min_px_dist: 15
+  knn: 0.70
+  downsample: true
+  histogram_method: "HISTOGRAM" # NONE, HISTOGRAM, CLAHE
+  max_slam: 80
+  max_msckf: 25 
+  feat_rep: "GLOBAL_FULL_INVERSE_DEPTH"
+  init_cov_dt: 1e-4
+  init_cov_ex_o: 1e-4
+  init_cov_ex_p: 1e-4
+  init_cov_in_k: 1e-2
+  init_cov_in_c: 1e-1
+  init_cov_in_r: 1e-6
+  sigma_px: 1
+  chi2_mult: 1
+
+  # feature related
+  fi_min_dist: 0.25
+  fi_max_dist: 400
+  fi_max_baseline: 2000
+  fi_max_cond_number: 10000
+
+  # ==================================================================
+  # ==================================================================
+
+cam0:
+  timeoffset: 0.02 #0.005150833025926063
+  T_cam_imu: #rotation from camera to IMU R_CtoI, position of camera in IMU p_CinI
+    - [-0.9643068644879889, 0.10476325082306648, 0.24318086351176366, 0.028003890549343567]
+    - [0.2547523735830533, 0.11663172823340355, 0.9599470131851499, -0.0023811792328845283]
+    - [0.07220456533450093, 0.98763439654878, -0.13915746296402148, -0.09572851678526087]
+    - [0.0, 0.0, 0.0, 1.0]
+  distortion_coeffs: [0.010223765310563545, -0.012615233755122038, 0.015323024372180942, -0.005508271253520351]
+  distortion_model: equidistant
+  intrinsics: [560.7218938525291, 561.1158512446797, 642.6282699331126, 404.17375803265895]
+  resolution: [1280, 800]
+  topic: "/ffc_rover_inertial_color/camB"
+
+cam1:
+  timeoffset: 0.02 #0.005297736091824806  
+  T_cam_imu: #rotation from camera to IMU R_CtoI, position of camera in IMU p_CinI
+    - [0.9994932375884755, 0.029446936089321935, -0.01208908474036485, -0.029139510046038097]
+    - [0.020547349526922404, -0.30676954427442166, 0.9515620069827732, 0.0010586309032425815]
+    - [0.024312022588152033, -0.9513281897750198, -0.30721914148870694, -0.05516291115454358]
+    - [0.0, 0.0, 0.0, 1.0]
+  distortion_coeffs: [-0.0015787399578141203, -0.0015262681807634057, 0.005694537511278028, -0.0027996161905917347]
+  distortion_model: equidistant
+  intrinsics: [569.6147413472829, 569.341729192912, 631.2659487608084, 398.51266057609143]
+  resolution: [1280, 800]
+  topic: "/ffc_rover_inertial_color/camD"
+

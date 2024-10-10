@@ -480,5 +480,6 @@ void ROSPublisher::publish_lidar_map() {
     map_pointcloud.header.frame_id = "global";
     map_pointcloud.header.stamp = ros::Time::now();
     pub_lidar_map.at(ikd->id).publish(map_pointcloud);
+    ROS_INFO("Number of points in Map %d",map_inL->points.size()) ; 
   }
 }

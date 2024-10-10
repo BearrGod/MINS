@@ -42,6 +42,7 @@ struct OptionsGPS;
 struct OptionsWheel;
 struct OptionsLidar;
 struct OptionsInit;
+struct OptionsZeroVelocityUpdate ; 
 
 /**
  * @brief Struct which stores all options needed for state estimation.
@@ -73,6 +74,9 @@ struct OptionsEstimator {
 
   /// Initialization options
   shared_ptr<OptionsInit> init;
+
+  /// Zero velocity options 
+  shared_ptr<OptionsZeroVelocityUpdate> zupt ; 
 
   /// Gravity in the global frame
   Eigen::Vector3d gravity = Eigen::Vector3d::Zero();

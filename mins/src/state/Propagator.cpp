@@ -103,6 +103,21 @@ void Propagator::propagate(double timestamp) {
   state->time = timestamp;
 }
 
+
+
+void Propagator::clean_old_imu_measurements(double oldest_time) {
+  if (oldest_time < 0)
+    return;
+  auto it0 = imu_data.begin();
+  while (it0 != imu_data.end()) {
+    if (it0->timestamp < oldest_time) {
+      it0 = imu_data.erase(it0);
+    } else {
+      it0++;
+    }
+  }
+}
+
 bool Propagator::select_imu_readings(double time0, double time1, vector<ImuData> &prop_data) {
 
   // Ensure we have some measurements in the first place!

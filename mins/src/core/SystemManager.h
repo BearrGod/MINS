@@ -59,6 +59,7 @@ class UpdaterLidar;
 class UpdaterVicon;
 class UpdaterWheel;
 class TimeChecker;
+class UpdaterZeroVelocity ; 
 
 class SystemManager {
 
@@ -117,6 +118,9 @@ public:
   /// Timing recorder for analysis
   std::shared_ptr<TimeChecker> tc_sensors;
 
+  /// Zero Velocity Updater 
+  std::shared_ptr<UpdaterZeroVelocity> updaterZUPT ; 
+
 protected:
   /// Determine next clone time
   bool get_next_clone_time(double &clone_time, double meas_t);
@@ -141,6 +145,8 @@ protected:
 
   /// Total distance traveled
   double distance = 0;
+
+  bool did_zupt_update = false ; 
 };
 } // namespace mins
 

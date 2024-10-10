@@ -46,6 +46,7 @@ class State;
 class UpdaterStatistics;
 struct CamSimData;
 struct TimeChecker;
+class  UpdaterZeroVelocity ; 
 
 typedef vector<shared_ptr<ov_core::Feature>> V_Feature;
 typedef shared_ptr<ov_core::FeatureDatabase> DB_ptr;
@@ -70,6 +71,9 @@ public:
   /// return images used in last update for visualization
   cv::Mat get_track_img(int cam_id);
 
+  /// Getter for feature database
+  map<int ,DB_ptr> get_feature_database() ;  
+  
   /// Chi information
   map<int, shared_ptr<UpdaterStatistics>> Chi;
 
@@ -78,6 +82,7 @@ public:
 
 private:
   friend class Initializer;
+  friend class UpdaterZeroVelocity ; 
 
   /// marginalize SLAM features that are lost tracking
   void marginalize_slam_features(const ov_core::CameraData &camdata);

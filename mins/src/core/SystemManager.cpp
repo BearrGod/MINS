@@ -43,6 +43,7 @@
 #include "update/cam/UpdaterCamera.h"
 #include "update/gps/GPSTypes.h"
 #include "update/gps/MathGPS.h"
+#include "update/UpdaterZeroVelocity.h"
 #include "update/gps/UpdaterGPS.h"
 #include "update/lidar/UpdaterLidar.h"
 #include "update/vicon/UpdaterVicon.h"
@@ -68,7 +69,6 @@ SystemManager::SystemManager(shared_ptr<OptionsEstimator> op, shared_ptr<Simulat
   state->op->gps->enabled ? up_gps = make_shared<UpdaterGPS>(state) : shared_ptr<UpdaterGPS>();
   state->op->wheel->enabled ? up_whl = make_shared<UpdaterWheel>(state) : shared_ptr<UpdaterWheel>();
   state->op->lidar->enabled ? up_ldr = make_shared<UpdaterLidar>(state) : shared_ptr<UpdaterLidar>();
-
   // Propagator & Initializer
   prop = std::make_shared<Propagator>(state);
   state->op->use_imu_res ? state->hook_propagator(prop) : void();
@@ -77,16 +77,27 @@ SystemManager::SystemManager(shared_ptr<OptionsEstimator> op, shared_ptr<Simulat
   // Average interpolation order and cloning frequency
   avg_order = make_shared<STAT>();
   avg_freq = make_shared<STAT>();
+
+  // Zero Velocity updater 
+  (state->op->zupt->try_zupt && state->op->cam->enabled && state->op->zupt != nullptr && state->op->imu != nullptr)  ? updaterZUPT = make_shared<UpdaterZeroVelocity>(*state->op->zupt,*state->op->imu,prop,state->op->gravity.norm())  : shared_ptr<UpdaterZeroVelocity>() ; 
 }
 
 bool SystemManager::feed_measurement_imu(const ov_core::ImuData &imu) {
+  double oldest_time = state->newest_clone_time();
   // Feed our propagator
   prop->feed_imu(imu);
 
   // Try initialization if not initialized
   if (!state->initialized && !initializer->try_initializtion())
     return false;
-
+  
+  // Check if we should do zero-velocity, if so update the state with it
+  // Note that in the case that we only use in the beginning initialization phase
+  // If we have since moved, then we should never try to do a zero velocity update!
+  if(state->initialized && updaterZUPT != nullptr){
+    // PRINT2("Will try to feed zupt") ; 
+    updaterZUPT->feed_imu(imu,oldest_time) ; 
+  }
   // The following steps should be processed after system initialized
   assert(state->initialized);
   tc_sensors->ding("IMU");
@@ -140,6 +151,18 @@ void SystemManager::feed_measurement_camera(const CameraData &cam) {
   state->initialized ? tc_sensors->ding("CAM") : void();
   up_cam->feed_measurement(cam);
   // Try update
+  // Handle the case whre we have zvupt 
+  if(state->initialized && updaterZUPT != nullptr ){
+    if(state->time != cam.timestamp){
+      did_zupt_update = updaterZUPT->try_update(state,cam.timestamp) ; 
+    }
+    if(did_zupt_update) {
+      assert(state->time == cam.timestamp) ; 
+      prop->clean_old_imu_measurements(cam.timestamp + state->cam_dt[cam.sensor_ids.at(0)]->value()(0) - 0.10) ; 
+      updaterZUPT->clean_old_imu_measurements(cam.timestamp + state->cam_dt[cam.sensor_ids.at(0)]->value()(0) - 0.10) ; 
+      return ; 
+    }
+  }
   state->initialized ? up_cam->try_update(cam.sensor_ids.at(0)) : void();
   state->initialized ? tc_sensors->dong("CAM") : void();
 }
@@ -278,6 +301,7 @@ bool SystemManager::get_next_clone_time(double &clone_time, double meas_t) {
   int freq = state->op->clone_freq;
   int intr = state->op->intr_order;
   state->op->dynamic_cloning ? dynamic_cloning(freq, intr) : void();
+  // PRINT4("[SystemManager] Clone fequency : %d , Integration order %d \n",freq,intr) ; 
 
   // Set desired clone time
   if (state->clones.empty()) // no clone
