@@ -39,6 +39,7 @@ struct LiDARData {
 
   LiDARData();
 
+
   /// Timestamp of the reading
   double time;
 
@@ -70,6 +71,9 @@ struct LiDARData {
 
 struct iKDDATA {
   iKDDATA(int id);
+
+  // set the timestamp of the map in case of time jump
+  void setTime(double time) ; 
   // ikd tree
   std::shared_ptr<KD_TREE<pcl::PointXYZI>> tree;
   // time this tree (map) is anchored at

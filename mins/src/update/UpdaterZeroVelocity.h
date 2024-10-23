@@ -66,7 +66,7 @@ class UpdaterZeroVelocity {
          * @param timestamp Next camera timestamp we want to see if we should propagate to.
          * @return True if the system is currently at zero velocity
          */
-        bool try_update(std::shared_ptr<State> state, double timestamp);
+        bool try_update(std::shared_ptr<State> state, double timestamp , double time_offset = 0.0);
 
     protected : 
         /// Our history of IMU messages (time, angular, linear)

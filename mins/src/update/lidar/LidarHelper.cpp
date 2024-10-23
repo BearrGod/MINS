@@ -135,7 +135,8 @@ bool LidarHelper::transform_to_map(shared_ptr<State> state, shared_ptr<LiDARData
   if (!state->get_interpolated_pose(ikd->time + dt, RGtoA, pAinG)) {
     PRINT4("UpdaterLidar::register_scan::Cannot get pose for map at %.4f\n", ikd->time + dt);
     state->print_info();
-    assert(0);
+    return false ; 
+    // assert(0);
   }
 
   // New LiDAR frame
@@ -239,9 +240,10 @@ void LidarHelper::propagate_map_to_newest_clone(shared_ptr<State> state, shared_
     PRINT4(RED "[LiDAR]propagate_map_to_newest_clone::Cannot get the bounding_poses_n for Map %d!\n" RESET, ikd->id);
     PRINT4(RED "[LiDAR]propagate_map_to_newest_clone::ikd_anchor_time.at(lidar_inL->id): %.4f\n", ikd->time);
     PRINT4(RED "[LiDAR]propagate_map_to_newest_clone::dt: %.4f\n", dt);
-    PRINT4(RED "[LiDAR]propagate_map_to_newest_clone::lidar_inL->time + dt: %.4f\n", ikd->time + dt);
+    PRINT4(RED "[LiDAR]propagate_map_to_newest_clone::lidar_inL->time + dt: %.4f\n" RESET , ikd->time + dt);
     state->print_info();
-    exit(EXIT_FAILURE);
+    return ; 
+    //exit(EXIT_FAILURE);
   }
   Matrix3d RGtoInew = state->clones.at(state->newest_clone_time())->Rot();
   Vector3d pInewinG = state->clones.at(state->newest_clone_time())->pos();

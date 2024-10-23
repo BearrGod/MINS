@@ -7,7 +7,7 @@ cam:
   stereo_pair: [0, 1]
   do_calib_ext: true
   do_calib_int: false
-  do_calib_dt: true
+  do_calib_dt: false
   n_pts: 200
   fast: 25
   grid_x: 5
@@ -50,7 +50,7 @@ cam0:
   distortion_model: equidistant
   intrinsics: [561.2202111626574, 561.4599287600455, 639.5230006604587, 416.3062918322655]
   resolution: [1280, 800]
-  topic: "/ffc_rover_inertial_node/camB"
+  topic: "/ffc_rover_inertial_color/camB"
 
 cam1:
   timeoffset: -0.0007718543408472442
@@ -63,5 +63,5 @@ cam1:
   distortion_model: equidistant
   intrinsics: [569.6147413472829, 569.341729192912, 631.2659487608084, 398.51266057609143]
   resolution: [1280, 800]
-  topic: "/ffc_rover_inertial_node/camD"
+  topic: "/ffc_rover_inertial_color/camD"
 

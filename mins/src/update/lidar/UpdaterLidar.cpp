@@ -268,6 +268,7 @@ bool UpdaterLidar::update(std::shared_ptr<LiDARData> lidar, shared_ptr<iKDDATA> 
   //=========================================================================
   // Get LiDAR measurements in Map
   bool success = LidarHelper::transform_to_map(state, lidar, ikd);
+  if(!success) return false ; 
   assert(success);
   // vec<{res, H}>
   vector<pair<VectorXd, MatrixXd>> vec_lin(lidar->size());
@@ -432,4 +433,9 @@ pair<Matrix3d, Vector3d> UpdaterLidar::get_pose_LinG(int lidar_id, double lidar_
   pose_LinG.first = RGtoL;
   pose_LinG.second = pLinG;
   return pose_LinG;
+}
+
+void UpdaterLidar::setTime(double t , size_t id)
+{
+  ikd_data.at(id)->time = t ; 
 }

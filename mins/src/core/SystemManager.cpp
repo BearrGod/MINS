@@ -83,7 +83,7 @@ SystemManager::SystemManager(shared_ptr<OptionsEstimator> op, shared_ptr<Simulat
 }
 
 bool SystemManager::feed_measurement_imu(const ov_core::ImuData &imu) {
-  double oldest_time = state->newest_clone_time();
+  double oldest_time = state->oldest_keyframe_time();
   // Feed our propagator
   prop->feed_imu(imu);
 
@@ -154,13 +154,12 @@ void SystemManager::feed_measurement_camera(const CameraData &cam) {
   // Handle the case whre we have zvupt 
   if(state->initialized && updaterZUPT != nullptr ){
     if(state->time != cam.timestamp){
-      did_zupt_update = updaterZUPT->try_update(state,cam.timestamp) ; 
-    }
-    if(did_zupt_update) {
-      assert(state->time == cam.timestamp) ; 
-      prop->clean_old_imu_measurements(cam.timestamp + state->cam_dt[cam.sensor_ids.at(0)]->value()(0) - 0.10) ; 
-      updaterZUPT->clean_old_imu_measurements(cam.timestamp + state->cam_dt[cam.sensor_ids.at(0)]->value()(0) - 0.10) ; 
-      return ; 
+      if(updaterZUPT->try_update(state,cam.timestamp,state->cam_dt.at((size_t)cam.sensor_ids.at(0))->value()(0))) {
+        // assert(state->time == cam.timestamp) ; 
+        prop->clean_old_imu_measurements(cam.timestamp + state->cam_dt[cam.sensor_ids.at(0)]->value()(0) - 0.10) ; 
+        updaterZUPT->clean_old_imu_measurements(cam.timestamp + state->cam_dt[cam.sensor_ids.at(0)]->value()(0) - 0.10) ; 
+        return ; 
+      }
     }
   }
   state->initialized ? up_cam->try_update(cam.sensor_ids.at(0)) : void();
@@ -201,6 +200,15 @@ void SystemManager::feed_measurement_lidar(std::shared_ptr<pcl::PointCloud<pcl::
   if (!state->op->lidar->enabled)
     return;
   state->initialized ? tc_sensors->ding("LDR") : void();
+  if(state->initialized && updaterZUPT != nullptr ){
+      if(state->time != ((double)lidar->header.stamp / 1000)){
+        if(updaterZUPT->try_update(state,((double)lidar->header.stamp / 1000), state->lidar_dt.at(0)->value()(0)))
+        {
+          up_ldr->setTime(((double)lidar->header.stamp / 1000) + state->lidar_dt.at(0)->value()(0) , 0) ; 
+          return ; 
+        }
+    }
+  }
   // Feed measurement & try update
   up_ldr->feed_measurement(lidar);
   state->initialized ? up_ldr->try_update() : void();
@@ -411,7 +419,8 @@ bool SystemManager::get_next_clone_time(double &clone_time, double meas_t) {
 
   // All good. return clone time.
   clone_time = tmp_clone_time;
-  assert(clone_time >= state->time);
+  // PRINT2("Getting clone clone time %f , state time %f success.\n",tmp_clone_time,state->time);
+  if(clone_time < state->time) { return false ; }
   PRINT0("Getting clone time success.\n");
   PRINT0("%.4f %.4f %.4f %d\n", state->time, state->est_A->mean, state->est_a->mean, state->op->clone_freq);
   return true;

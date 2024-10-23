@@ -56,6 +56,9 @@ public:
   /// Propagate the map frame
   void propagate_map_frame();
 
+  /// To set the timestam of a certain map 
+  void setTime(double t , size_t id = 0 ) ; 
+
   /// Get the LiDAR pose at t_given in global
   pair<Matrix3d, Vector3d> get_pose_LinG(int lidar_id, double lidar_time);
 

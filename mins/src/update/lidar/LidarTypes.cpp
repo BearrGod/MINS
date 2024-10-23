@@ -63,6 +63,7 @@ LiDARData::LiDARData() {
   pointcloud_in_map = std::make_shared<pcl::PointCloud<pcl::PointXYZI>>();
 }
 
+
 Eigen::Vector3d LiDARData::p(int p_id) {
   auto p = pointcloud->points.at(p_id);
   return {p.x, p.y, p.z};
@@ -80,3 +81,5 @@ iKDDATA::iKDDATA(int id) {
   tree = std::make_shared<KD_TREE<pcl::PointXYZI>>();
   this->id = id;
 }
+
+void iKDDATA::setTime(double t) { time = t ; }

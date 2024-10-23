@@ -11,6 +11,7 @@
 #include "utils/Print_Logger.h"
 #include "utils/quat_ops.h"
 #include "types/Vec.h"
+#include "utils/colors.h"
 #include "types/IMU.h"
 
 using namespace  ov_core ; 
@@ -28,7 +29,7 @@ UpdaterZeroVelocity::UpdaterZeroVelocity(OptionsZeroVelocityUpdate& options , Op
   }
 }
 
-bool UpdaterZeroVelocity::try_update(std::shared_ptr<State> state, double timestamp){
+bool UpdaterZeroVelocity::try_update(std::shared_ptr<State> state, double timestamp , double time_offset){
     // Return if we don't have any imu data yet
   if (imu_data.empty()) {
     last_zupt_state_timestamp = 0.0;
@@ -39,33 +40,34 @@ bool UpdaterZeroVelocity::try_update(std::shared_ptr<State> state, double timest
     last_zupt_state_timestamp = 0.0;
     return false;
   }
+  auto pin_ts = imu_data.back().timestamp ; 
   
   // Set the last time offset value if we have just started the system up
   if (!have_last_prop_time_offset) {
-    last_prop_time_offset = state->cam_dt.at(0)->value()(0) ;
+    last_prop_time_offset = time_offset ;
     have_last_prop_time_offset = true;
   }
-  double t_off_new = state->cam_dt.at(0)->value()(0) ;
+  double t_off_new = time_offset /*state->cam_dt.at((size_t)cam_id)->value()(0)*/ ;
   // First lets construct an IMU vector of measurements we need
   // double time0 = state->_timestamp+t_off_new;
-  double time0 = state->time ; //+ last_prop_time_offset;
-  double time1 = timestamp ;//+ t_off_new;
+  double time0 = state->time + last_prop_time_offset ;
+  double time1 = timestamp + t_off_new ;
   // Select bounding inertial measurements
-  std::vector<ov_core::ImuData> imu_recent = mins::select_imu_readings(imu_data, time0, time1);
+  std::vector<ov_core::ImuData> imu_recent = imu_data ; //mins::select_imu_readings(imu_data, time0, time1); 
   // Move forward in time
   last_prop_time_offset = t_off_new;
   // Check that we have at least one measurement to propagate with
   if (imu_recent.size() < 2) {
-    PRINT4("[ZUPT]: There are no IMU data to check for zero velocity with!!\n");
+    PRINT2("[ZUPT]: There are no IMU data to check for zero velocity with!!\n");
     last_zupt_state_timestamp = 0.0;
     return false;
   }
 
   // If we should integrate the acceleration and say the velocity should be zero
   // Also if we should still inflate the bias based on their random walk noises
-  bool integrated_accel_constraint = false; // untested
+  bool integrated_accel_constraint = true ; // untested
   bool model_time_varying_bias = true;
-  bool override_with_disparity_check = true;
+
   // Order of our Jacobian
   std::vector<std::shared_ptr<ov_type::Type>> Hx_order;
   Hx_order.push_back(state->imu->q());
@@ -158,69 +160,54 @@ bool UpdaterZeroVelocity::try_update(std::shared_ptr<State> state, double timest
   } else {
     boost::math::chi_squared chi_squared_dist(res.rows());
     chi2_check = boost::math::quantile(chi_squared_dist, 0.95);
-    PRINT4("[ZUPT]: chi2_check over the residual limit - %d\n" , (int)res.rows());
+    PRINT2("[ZUPT]: chi2_check over the residual limit - %d\n" , (int)res.rows());
   }
   // Check if the image disparity
   bool disparity_passed = false;
-  // if (override_with_disparity_check) {
-// 
-    // Get the disparity statistics from this image to the previous
-    // double time0_cam = state->time;
-    // double time1_cam = timestamp;
-    // int num_features = 0;
-    // double disp_avg = 0.0;
-    // double disp_var = 0.0;
-    // FeatureHelper::compute_disparity(_db, time0_cam, time1_cam, disp_avg, disp_var, num_features);
-// 
-    // Check if this disparity is enough to be classified as moving
-    // disparity_passed = (disp_avg < _options.zupt_max_disparity && num_features > 20);
-    // if (disparity_passed) {
-      // PRINT4("[ZUPT]: passed disparity (%.3f < %.3f, %d features)\n" , disp_avg, _options.zupt_max_disparity, (int)num_features);
-    // } else {
-      // PRINT4( "[ZUPT]: failed disparity (%.3f > %.3f, %d features)\n" , disp_avg, _options.zupt_max_disparity, (int)num_features);
-    // }
-  // }
 
-    // Check if we are currently zero velocity
-    // We need to pass the chi2 and not be above our velocity threshold
-    if (!disparity_passed && (chi2 > _options.zupt_chi2_multipler  * chi2_check || state->imu->vel().norm() > _options.zupt_max_velocity)) {
-      last_zupt_state_timestamp = 0.0;
-      last_zupt_count = 0;
-      PRINT4("[ZUPT]: rejected |v_IinG| = %.3f (chi2 %.3f > %.3f)\n" , state->imu->vel().norm(), chi2,
-                  _options.zupt_chi2_multipler * chi2_check);
-      return false;
-    }
-    PRINT4("[ZUPT]: accepted |v_IinG| = %.3f (chi2 %.3f < %.3f)\n" , state->imu->vel().norm(), chi2,
-               _options.zupt_chi2_multipler * chi2_check);
+  // Check if we are currently zero velocity
+  // We need to pass the chi2 and not be above our velocity threshold
+  if (!disparity_passed && (chi2 > _options.zupt_chi2_multipler  * chi2_check || state->imu->vel().norm() > _options.zupt_max_velocity)) {
+    last_zupt_state_timestamp = 0.0;
+    last_zupt_count = 0;
+    PRINT2(BOLDBLACK "[ZUPT]: rejected |v_IinG| = %.3f (chi2 %.3f > %.3f)\n" RESET , state->imu->vel().norm(), chi2,
+                _options.zupt_chi2_multipler * chi2_check);
+    return false;
+  }
+  PRINT2(REDPURPLE"[ZUPT]: accepted |v_IinG| = %.3f (chi2 %.3f < %.3f)\n" RESET, state->imu->vel().norm(), chi2,
+             _options.zupt_chi2_multipler * chi2_check);
+  // Do our update, only do this update if we have previously detected
+  // If we have succeeded, then we should remove the current timestamp feature tracks
+  // This is because we will not clone at this timestep and instead do our zero velocity update
+  // NOTE: We want to keep the tracks from the second time we have called the zv-upt since this won't have a clone
+  // NOTE: All future times after the second call to this function will also *not* have a clone, so we can remove those
+  if (last_zupt_count >= 2) {
+    // _db->cleanup_measurements_exact(last_zupt_state_timestamp);
+  }
+  else{
+    last_zupt_count++ ; 
+    return false ; 
+  }
 
-    // Do our update, only do this update if we have previously detected
-    // If we have succeeded, then we should remove the current timestamp feature tracks
-    // This is because we will not clone at this timestep and instead do our zero velocity update
-    // NOTE: We want to keep the tracks from the second time we have called the zv-upt since this won't have a clone
-    // NOTE: All future times after the second call to this function will also *not* have a clone, so we can remove those
-    if (last_zupt_count >= 2) {
-      // _db->cleanup_measurements_exact(last_zupt_state_timestamp);
-    }
-
-    // Else we are good, update the system
-    // 1) update with our IMU measurements directly
-    // 2) propagate and then explicitly say that our ori, pos, and vel should be zero
-    // Next propagate the biases forward in time
-    // NOTE: G*Qd*G^t = dt*Qd*dt = dt*Qc
-    if (model_time_varying_bias) {
-      Eigen::MatrixXd Phi_bias = Eigen::MatrixXd::Identity(6, 6);
-      std::vector<std::shared_ptr<ov_type::Type>> Phi_order;
-      Phi_order.push_back(state->imu->bg());
-      Phi_order.push_back(state->imu->ba());
-      StateHelper::EKFPropagation(state, Phi_order, Phi_order, Phi_bias, Q_bias);
-    }
-    // Finally move the state time forward
-    StateHelper::EKFUpdate(state, Hx_order, H, res, R,"ZUPT");
-    state->time = timestamp;
-    // Finally return
-    last_zupt_state_timestamp = timestamp;
-    last_zupt_count++;
-    return true;
+  // Else we are good, update the system
+  // 1) update with our IMU measurements directly
+  // 2) propagate and then explicitly say that our ori, pos, and vel should be zero
+  // Next propagate the biases forward in time
+  // NOTE: G*Qd*G^t = dt*Qd*dt = dt*Qc
+  if (model_time_varying_bias) {
+    Eigen::MatrixXd Phi_bias = Eigen::MatrixXd::Identity(6, 6);
+    std::vector<std::shared_ptr<ov_type::Type>> Phi_order;
+    Phi_order.push_back(state->imu->bg());
+    Phi_order.push_back(state->imu->ba());
+    StateHelper::EKFPropagation(state, Phi_order, Phi_order, Phi_bias, Q_bias);
+  }
+  // Finally move the state time forward
+  StateHelper::EKFUpdate(state, Hx_order, H, res, R,"ZUPT");
+  state->time = timestamp + t_off_new ;
+  // Finally return
+  last_zupt_state_timestamp = timestamp;
+  last_zupt_count++;
+  return true;
 }
 
 void UpdaterZeroVelocity::clean_old_imu_measurements(double oldest_time) {
@@ -239,13 +226,13 @@ void UpdaterZeroVelocity::clean_old_imu_measurements(double oldest_time) {
 void UpdaterZeroVelocity::feed_imu(const ov_core::ImuData &message, double oldest_time) {
     // Append it to our vector
     imu_data.emplace_back(message);
+    // Loop through and delete IMU messages that are older than the oldest clone time
     // Sort our imu data (handles any out of order measurements)
-    // std::sort(imu_data.begin(), imu_data.end(), [](const IMUDATA i, const IMUDATA j) {
-    //    return i.timestamp < j.timestamp;
-    //
-    // Clean old measurements
-    // std::cout << "ZVUPT: imu_data.size() " << imu_data.size() << std::endl;
-    clean_old_imu_measurements(oldest_time - 0.10);
+    std::sort(imu_data.begin(), imu_data.end(), [](const ov_core::ImuData i, const ov_core::ImuData j) {
+       return i.timestamp < j.timestamp;
+    });
+    for (auto data = imu_data.begin(); (*data).timestamp < oldest_time - 1;)
+      data = imu_data.erase(data);
 } 
 
 std::vector<ov_core::ImuData> mins::select_imu_readings(const std::vector<ov_core::ImuData> &imu_data, double time0, double time1,
@@ -258,21 +245,21 @@ std::vector<ov_core::ImuData> mins::select_imu_readings(const std::vector<ov_cor
     }
     // Make sure forward request
     if (time1 <= time0) {
-      if(warn) (time1 < time0) && warn ? PRINT4("Propagator::select_imu_readings::Backward request. time0: %.4f, time1: %.4f. \n", time0, time1) : void();
+      if(warn) (time1 < time0) && warn ? PRINT3(RED "Propagator::select_imu_readings::Backward request. time0: %.4f, time1: %.4f. \n", time0, time1) : void();
       return {};
     }
 
     // Make sure we have IMU data to process
     if (imu_data.front().timestamp > time0) {
-      if(warn) PRINT4( "Propagator::select_imu_readings::Cannot handle request. " );
-      if(warn) PRINT4( "time0 %.4f < oldest imu %.4f\n" , time0, imu_data.front().timestamp);
+      if(warn) PRINT3( "Propagator::select_imu_readings::Cannot handle request. " );
+      if(warn) PRINT3( "time0 %.4f < oldest imu %.4f\n" , time0, imu_data.front().timestamp);
       return {};
     }
 
     // Make sure we have IMU data to process
     if (imu_data.back().timestamp < time1) {
-      if(warn) PRINT4("Propagator::select_imu_readings::Cannot handle request. " );
-      if(warn) PRINT4("newest imu %.4f < time1 %.4f\n", imu_data.back().timestamp, time1);
+      if(warn) PRINT3("Propagator::select_imu_readings::Cannot handle request. " );
+      if(warn) PRINT3("newest imu %.4f < time1 %.4f\n", imu_data.back().timestamp, time1);
       return {};
     }
 
