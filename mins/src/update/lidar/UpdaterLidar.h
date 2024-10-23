@@ -51,7 +51,7 @@ public:
   void feed_measurement(std::shared_ptr<pcl::PointCloud<pcl::PointXYZ>> lidar);
 
   /// Try update with available measurements
-  void try_update();
+  void try_update(bool update_map=true);
 
   /// Propagate the map frame
   void propagate_map_frame();

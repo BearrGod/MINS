@@ -204,10 +204,23 @@ void SystemManager::feed_measurement_lidar(std::shared_ptr<pcl::PointCloud<pcl::
       if(state->time != ((double)lidar->header.stamp / 1000)){
         if(updaterZUPT->try_update(state,((double)lidar->header.stamp / 1000), state->lidar_dt.at(0)->value()(0)))
         {
-          up_ldr->setTime(((double)lidar->header.stamp / 1000) + state->lidar_dt.at(0)->value()(0) , 0) ; 
+          //up_ldr->setTime(((double)lidar->header.stamp / 1000) + state->lidar_dt.at(0)->value()(0) , 0) ; 
+          up_ldr->propagate_map_frame() ; 
           return ; 
         }
     }
+  }
+  // Deal ith the dynamic situation and threshold
+  // compute_accelerations() ;  
+  if(state->initialized && (state->est_a->mean > state->op->lidar->max_lin_accel || state->est_A->mean > state->op->lidar->max_ang_accel)) // We are initialized but in an overly dinamic situtation 
+  {
+    // We do not map but still propagate the map to the newest clone 
+    PRINT2(BOLDYELLOW" Acceleration over threshold. lin_accel : %.5f and ang_accel : %.5f \n" RESET, state->est_a->mean, state->est_A->mean) ; 
+    // Update the state without adding points to the map. This means we will have the location without having the map. 
+    // Dynamic situaions have to be in short bursts though
+    // up_ldr->try_update(false) ; 
+    up_ldr->propagate_map_frame() ;
+    return ; 
   }
   // Feed measurement & try update
   up_ldr->feed_measurement(lidar);
@@ -421,8 +434,8 @@ bool SystemManager::get_next_clone_time(double &clone_time, double meas_t) {
   clone_time = tmp_clone_time;
   // PRINT2("Getting clone clone time %f , state time %f success.\n",tmp_clone_time,state->time);
   if(clone_time < state->time) { return false ; }
-  PRINT0("Getting clone time success.\n");
-  PRINT0("%.4f %.4f %.4f %d\n", state->time, state->est_A->mean, state->est_a->mean, state->op->clone_freq);
+  PRINT2("Getting clone time success.\n");
+  PRINT2(BOLDBLUE"Acceleration values %.4f %.4f %.4f %d\n" RESET, state->time, state->est_A->mean, state->est_a->mean, state->op->clone_freq);
   return true;
 }
 

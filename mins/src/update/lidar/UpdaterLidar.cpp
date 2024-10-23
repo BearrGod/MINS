@@ -109,7 +109,7 @@ void UpdaterLidar::feed_measurement(std::shared_ptr<pcl::PointCloud<pcl::PointXY
   erase_invalid_dataset();
 }
 
-void UpdaterLidar::try_update() {
+void UpdaterLidar::try_update(bool update_map) {
   // Loop through stacked lidar and process them
   for (auto lidar = stack_lidar_new.begin(); lidar != stack_lidar_new.end();) {
     // Try update
@@ -124,9 +124,12 @@ void UpdaterLidar::try_update() {
   }
 
   // Register used pointcloud in the map
-  for (auto lidar = stack_lidar_used.begin(); lidar != stack_lidar_used.end();) {
+  if(update_map)
+  {
+    for (auto lidar = stack_lidar_used.begin(); lidar != stack_lidar_used.end();) {
     LidarHelper::register_scan(state, *lidar, ikd_data.at((*lidar)->id));
     lidar = stack_lidar_used.erase(lidar);
+    }
   }
 }
 

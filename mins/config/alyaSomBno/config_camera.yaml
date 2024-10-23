@@ -5,7 +5,7 @@ cam:
   max_n: 2
   use_stereo: false
   stereo_pair: [0, 1]
-  do_calib_ext: true
+  do_calib_ext: false
   do_calib_int: false
   do_calib_dt: false
   n_pts: 200

@@ -17,16 +17,18 @@ lidar:
   raw_remove_motion_blur: false # required to set v_angles and h_angles correctly
   raw_point_dt: 1e-6
   map_do_downsample: true
-  map_downsample_size: 0.1
-  map_noise: 0.01
+  map_downsample_size: 0.03
+  map_noise: 0.005
   map_ngbr_num: 8
   map_ngbr_max_d: 1.0
   map_decay_time: 3600 # sec
   map_decay_dist: 1000 # m
-  map_use_icp: false
-  map_icp_dist: 30 # m
+  max_lin_accel: 15.0
+  max_ang_accel: 15.0 
+  map_use_icp: true
+  map_icp_dist: 10 # m
   plane_max_p2pd: 0.05
-  plane_max_condi: 200.0
+  plane_max_condi: 500.0
 
 lidar0:
   timeoffset: 0.008

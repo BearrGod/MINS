@@ -12,5 +12,5 @@ sys:
   exp_id: 0
 
   path_bag: "/home/wsl/Downloads/urban28.bag"
-  bag_start: 118
+  bag_start: 0 #118
   bag_durr: -1

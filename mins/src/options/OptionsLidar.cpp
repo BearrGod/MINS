@@ -51,6 +51,8 @@ void mins::OptionsLidar::load(const std::shared_ptr<ov_core::YamlParser> &parser
     parser->parse_external(f, "lidar", "map_do_downsample", map_do_downsample);
     parser->parse_external(f, "lidar", "map_decay_time", map_decay_time);
     parser->parse_external(f, "lidar", "map_decay_dist", map_decay_dist);
+    parser->parse_external(f, "lidar", "max_lin_accel", max_lin_accel);
+    parser->parse_external(f, "lidar", "max_ang_accel", max_ang_accel);
     parser->parse_external(f, "lidar", "map_use_icp", map_use_icp);
     parser->parse_external(f, "lidar", "map_icp_dist", map_icp_dist);
     parser->parse_external(f, "lidar", "plane_max_condi", plane_max_condi);
@@ -118,6 +120,8 @@ void mins::OptionsLidar::print() {
   PRINT1("\t- init_cov_dt: %.4f\n", init_cov_dt);
   PRINT1("\t- init_cov_ex_o: %.4f\n", init_cov_ex_o);
   PRINT1("\t- init_cov_ex_p: %.4f\n", init_cov_ex_p);
+  PRINT1("\t- max_lin_accel: %.4f\n", max_lin_accel);
+  PRINT1("\t- max_ang_accel: %.4f\n", max_ang_accel);
   for (int i = 0; i < max_n; i++) {
     print_i(i);
   }

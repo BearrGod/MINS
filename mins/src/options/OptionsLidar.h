@@ -85,6 +85,10 @@ struct OptionsLidar {
   bool raw_remove_motion_blur = true;
   double raw_point_dt = 1e-6;
 
+  // Dynamic Situations parameters 
+  double max_lin_accel = 1.0 ;
+  double max_ang_accel = 1.0 ;
+
   // IKD tree parameters
   int map_ngbr_num = 5;             // minimum number of neighbors for plane extraction
   double map_ngbr_max_d = 1;        // maximum distance of the most far neighbor (m)
